@@ -9,11 +9,12 @@
 # Description:
 #   SPNEGO functions used by SMB, SMB2/3 and DCERPC
 #
+from __future__ import print_function
 
 from struct import pack, unpack, calcsize
 
 ############### GSS Stuff ################
-GSS_API_SPNEGO_UUID              = '\x2b\x06\x01\x05\x05\x02' 
+GSS_API_SPNEGO_UUID              = '\x2b\x06\x01\x05\x05\x02'
 ASN1_SEQUENCE                    = 0x30
 ASN1_AID                         = 0x60
 ASN1_OID                         = 0x06
@@ -30,7 +31,7 @@ MechTypes = {
 '*\x86H\x86\xf7\x12\x01\x02\x02': 'KRB5 - Kerberos 5',
 '*\x86H\x86\xf7\x12\x01\x02\x02\x03': 'KRB5 - Kerberos 5 - User to User'
 }
-TypesMech = dict((v,k) for k, v in MechTypes.iteritems())
+TypesMech = dict((v,k) for k, v in iter(MechTypes.items()))
 
 def asn1encode(data = ''):
         #res = asn1.SEQUENCE(str).encode()
@@ -74,7 +75,7 @@ def asn1decode(data = ''):
             data = data[pad:]
             ans = data[:len2]
         # 1 byte length, string <= 0x7F
-	else:
+        else:
             pad = 0
             ans = data[:len1]
         return ans, len(ans)+pad+1
@@ -130,7 +131,7 @@ class GSSAPI:
         
     def dump(self):
         for i in self.fields.keys():
-            print "%s: {%r}" % (i,self[i])
+            print("%s: {%r}" % (i,self[i]))
 
     def getData(self):
         ans = pack('B',ASN1_AID)
@@ -245,7 +246,7 @@ class SPNEGO_NegTokenResp:
 
     def dump(self):
         for i in self.fields.keys():
-            print "%s: {%r}" % (i,self[i])
+            print("%s: {%r}" % (i,self[i]))
         
     def getData(self):
         ans = pack('B',SPNEGO_NegTokenResp.SPNEGO_NEG_TOKEN_RESP)
@@ -302,7 +303,7 @@ class SPNEGO_NegTokenInit(GSSAPI):
         payload = payload[1:]
         decode_data, total_bytes = asn1decode(payload)
         # Now we should have a SEQUENCE Tag
-	next_byte = unpack('B', decode_data[:1])[0]
+        next_byte = unpack('B', decode_data[:1])[0]
         if next_byte != ASN1_SEQUENCE:
             raise Exception('SEQUENCE tag not found %x' % next_byte)
         decode_data = decode_data[1:]

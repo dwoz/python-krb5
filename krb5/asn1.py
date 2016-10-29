@@ -30,11 +30,12 @@
 # Added [MS-KILE] data
 # Adapted to Enum
 #
+from __future__ import absolute_import
 
 
 from pyasn1.type import tag, namedtype, univ, constraint, char, useful
 
-import constants
+from . import constants
 
 
 def _application_tag(tag_value):
