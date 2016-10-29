@@ -1,0 +1,7 @@
+pyasn1
+PyCrypto
+pytest==2.8.5
+pytest-cov==1.8.0
+tox==1.8.0
+pep8
+pylint
