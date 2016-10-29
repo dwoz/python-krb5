@@ -154,14 +154,14 @@ def getKerberosTGT(clientName, password, domain, lmhash, nthash, aesKey='', kdcH
             raise 
 
     # This should be the PREAUTH_FAILED packet
-    
+
     asRep = decoder.decode(r, asn1Spec = KRB_ERROR())[0]
-    methods = decoder.decode(str(asRep['e-data']), asn1Spec=METHOD_DATA())[0]
-    salt = ''
+    methods = decoder.decode(asRep['e-data'], asn1Spec=METHOD_DATA())[0]
+    salt = b''
     encryptionTypesData = dict()
     for method in methods:
         if method['padata-type'] == constants.PreAuthenticationDataTypes.PA_ETYPE_INFO2.value:
-            etypes2 = decoder.decode(str(method['padata-value']), asn1Spec = ETYPE_INFO2())[0]
+            etypes2 = decoder.decode(method['padata-value'], asn1Spec = ETYPE_INFO2())[0]
             for etype2 in etypes2:
                 if etype2['salt'] is None:
                     salt = ''
@@ -179,7 +179,7 @@ def getKerberosTGT(clientName, password, domain, lmhash, nthash, aesKey='', kdcH
 
     enctype = supportedCiphers[0]
 
-    if encryptionTypesData.has_key(enctype) is False:
+    if enctype not in encryptionTypesData:
         raise Exception('No Encryption Data Available!')
 
     # Let's build the timestamp
@@ -604,7 +604,7 @@ class KerberosError(SessionError):
         self.packet = packet
         if packet != 0:
             self.error = self.packet['error-code']
-       
+
     def getErrorCode( self ):
         return self.error
 
@@ -626,4 +626,3 @@ class KerberosError(SessionError):
             pass
 
         return retString
-
