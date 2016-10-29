@@ -75,11 +75,11 @@ def sendReceive(data, host, kdcHost):
     return r
 
 def getKerberosTGT(clientName, password, domain, lmhash, nthash, aesKey='', kdcHost=None, requestPAC=True):
-    
+
     asReq = AS_REQ()
 
     domain = domain.upper()
-    serverName = Principal('krbtgt/%s'%domain, type=constants.PrincipalNameType.NT_PRINCIPAL.value)  
+    serverName = Principal('krbtgt/%s'%domain, type=constants.PrincipalNameType.NT_PRINCIPAL.value)
 
     pacRequest = KERB_PA_PAC_REQUEST()
     pacRequest['include-pac'] = requestPAC
@@ -118,11 +118,11 @@ def getKerberosTGT(clientName, password, domain, lmhash, nthash, aesKey='', kdcH
         aesKey = ''
 
     if nthash == '':
-        # This is still confusing. I thought KDC_ERR_ETYPE_NOSUPP was enough, 
-        # but I found some systems that accepts all ciphers, and trigger an error 
+        # This is still confusing. I thought KDC_ERR_ETYPE_NOSUPP was enough,
+        # but I found some systems that accepts all ciphers, and trigger an error
         # when requesting subsequent TGS :(. More research needed.
         # So, in order to support more than one cypher, I'm setting aes first
-        # since most of the systems would accept it. If we're lucky and 
+        # since most of the systems would accept it. If we're lucky and
         # KDC_ERR_ETYPE_NOSUPP is returned, we will later try rc4.
         if aesKey != '':
             if len(aesKey) == 64:
@@ -148,10 +148,10 @@ def getKerberosTGT(clientName, password, domain, lmhash, nthash, aesKey='', kdcH
                 seq_set_iter(reqBody, 'etype', supportedCiphers)
                 message = encoder.encode(asReq)
                 r = sendReceive(message, domain, kdcHost)
-            else: 
-                raise 
+            else:
+                raise
         else:
-            raise 
+            raise
 
     # This should be the PREAUTH_FAILED packet
 
@@ -165,16 +165,16 @@ def getKerberosTGT(clientName, password, domain, lmhash, nthash, aesKey='', kdcH
             for etype2 in etypes2:
                 if etype2['salt'] is None:
                     salt = ''
-                else: 
-                    salt = str(etype2['salt'])  
+                else:
+                    salt = str(etype2['salt'])
                 encryptionTypesData[etype2['etype']] = salt
         elif method['padata-type'] == constants.PreAuthenticationDataTypes.PA_ETYPE_INFO.value:
             etypes = decoder.decode(str(method['padata-value']), asn1Spec = ETYPE_INFO())[0]
             for etype in etypes:
                 if etype['salt'] is None:
                     salt = ''
-                else: 
-                    salt = str(etype['salt'])  
+                else:
+                    salt = str(etype['salt'])
                 encryptionTypesData[etype['etype']] = salt
 
     enctype = supportedCiphers[0]
@@ -185,7 +185,7 @@ def getKerberosTGT(clientName, password, domain, lmhash, nthash, aesKey='', kdcH
     # Let's build the timestamp
     timeStamp = PA_ENC_TS_ENC()
 
-    now = datetime.datetime.utcnow() 
+    now = datetime.datetime.utcnow()
     timeStamp['patimestamp'] = KerberosTime.to_asn1(now)
     timeStamp['pausec'] = now.microsecond
 
@@ -205,7 +205,7 @@ def getKerberosTGT(clientName, password, domain, lmhash, nthash, aesKey='', kdcH
     encodedTimeStamp = encoder.encode(timeStamp)
 
     # Key Usage 1
-    # AS-REQ PA-ENC-TIMESTAMP padata timestamp, encrypted with the 
+    # AS-REQ PA-ENC-TIMESTAMP padata timestamp, encrypted with the
     # client key (Section 5.2.7.2)
     encriptedTimeStamp = cipher.encrypt(key, 1, encodedTimeStamp, None)
 
@@ -214,7 +214,7 @@ def getKerberosTGT(clientName, password, domain, lmhash, nthash, aesKey='', kdcH
     encryptedData['cipher'] = encriptedTimeStamp
     encodedEncryptedData = encoder.encode(encryptedData)
 
-    # Now prepare the new AS_REQ again with the PADATA 
+    # Now prepare the new AS_REQ again with the PADATA
     # ToDo: cannot we reuse the previous one?
     asReq = AS_REQ()
 
@@ -250,16 +250,16 @@ def getKerberosTGT(clientName, password, domain, lmhash, nthash, aesKey='', kdcH
     seq_set_iter(reqBody, 'etype', ( (int(cipher.enctype),)))
 
     try:
-        tgt = sendReceive(encoder.encode(asReq), domain, kdcHost) 
+        tgt = sendReceive(encoder.encode(asReq), domain, kdcHost)
     except Exception as e:
         if str(e).find('KDC_ERR_ETYPE_NOSUPP') >= 0:
             if lmhash is '' and nthash is '' and (aesKey is '' or aesKey is None):
                 from impacket.ntlm import compute_lmhash, compute_nthash
-                lmhash = compute_lmhash(password) 
-                nthash = compute_nthash(password) 
+                lmhash = compute_lmhash(password)
+                nthash = compute_nthash(password)
                 return getKerberosTGT(clientName, password, domain, lmhash, nthash, aesKey, kdcHost, requestPAC)
-        raise 
-    
+        raise
+
     # So, we have the TGT, now extract the new session key and finish
 
     asRep = decoder.decode(tgt, asn1Spec = AS_REP())[0]
@@ -398,7 +398,7 @@ def getKerberosTGS(serverName, domain, kdcHost, tgt, cipher, sessionKey):
         # Let's extract the Ticket, change the domain and keep asking
         domain = spn.components[1]
         return getKerberosTGS(serverName, domain, kdcHost, r, cipher, newSessionKey)
-    
+
     return r, cipher, sessionKey, newSessionKey
 
 ################################################################################
@@ -490,7 +490,7 @@ def getKerberosType1(username, password, domain, lmhash, nthash, aesKey='', TGT 
                     tgt, cipher, oldSessionKey, sessionKey = getKerberosTGT(userName, password, domain, lmhash, nthash, aesKey, kdcHost)
                 except KerberosError as e:
                     if e.getErrorCode() == constants.ErrorCodes.KDC_ERR_ETYPE_NOSUPP.value:
-                        # We might face this if the target does not support AES 
+                        # We might face this if the target does not support AES
                         # So, if that's the case we'll force using RC4 by converting
                         # the password to lm/nt hashes and hope for the best. If that's already
                         # done, byebye.
@@ -498,17 +498,17 @@ def getKerberosType1(username, password, domain, lmhash, nthash, aesKey='', TGT 
                             from impacket.ntlm import compute_lmhash, compute_nthash
                             LOG.debug('Got KDC_ERR_ETYPE_NOSUPP, fallback to RC4')
                             lmhash = compute_lmhash(password)
-                            nthash = compute_nthash(password) 
+                            nthash = compute_nthash(password)
                             continue
                         else:
-                            raise 
+                            raise
                     else:
                         raise
 
         else:
             tgt = TGT['KDC_REP']
             cipher = TGT['cipher']
-            sessionKey = TGT['sessionKey'] 
+            sessionKey = TGT['sessionKey']
 
         # Now that we have the TGT, we should ask for a TGS for cifs
 
@@ -518,7 +518,7 @@ def getKerberosType1(username, password, domain, lmhash, nthash, aesKey='', TGT 
                 tgs, cipher, oldSessionKey, sessionKey = getKerberosTGS(serverName, domain, kdcHost, tgt, cipher, sessionKey)
             except KerberosError as e:
                 if e.getErrorCode() == constants.ErrorCodes.KDC_ERR_ETYPE_NOSUPP.value:
-                    # We might face this if the target does not support AES 
+                    # We might face this if the target does not support AES
                     # So, if that's the case we'll force using RC4 by converting
                     # the password to lm/nt hashes and hope for the best. If that's already
                     # done, byebye.
@@ -526,22 +526,22 @@ def getKerberosType1(username, password, domain, lmhash, nthash, aesKey='', TGT 
                         from impacket.ntlm import compute_lmhash, compute_nthash
                         LOG.debug('Got KDC_ERR_ETYPE_NOSUPP, fallback to RC4')
                         lmhash = compute_lmhash(password)
-                        nthash = compute_nthash(password) 
+                        nthash = compute_nthash(password)
                     else:
-                        raise 
+                        raise
                 else:
-                    raise 
+                    raise
             else:
                 break
         else:
             tgs = TGS['KDC_REP']
             cipher = TGS['cipher']
-            sessionKey = TGS['sessionKey'] 
+            sessionKey = TGS['sessionKey']
             break
 
     # Let's build a NegTokenInit with a Kerberos REQ_AP
 
-    blob = SPNEGO_NegTokenInit() 
+    blob = SPNEGO_NegTokenInit()
 
     # Kerberos
     blob['MechTypes'] = [TypesMech['MS KRB5 - Microsoft Kerberos 5']]
@@ -550,7 +550,7 @@ def getKerberosType1(username, password, domain, lmhash, nthash, aesKey='', TGT 
     tgs = decoder.decode(tgs, asn1Spec = TGS_REP())[0]
     ticket = Ticket()
     ticket.from_asn1(tgs['ticket'])
-    
+
     # Now let's build the AP_REQ
     apReq = AP_REQ()
     apReq['pvno'] = 5
@@ -570,7 +570,7 @@ def getKerberosType1(username, password, domain, lmhash, nthash, aesKey='', TGT 
     authenticator['cusec'] = now.microsecond
     authenticator['ctime'] = KerberosTime.to_asn1(now)
 
-    
+
     authenticator['cksum'] = None
     authenticator['cksum']['cksumtype'] = 0x8003
 
