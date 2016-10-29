@@ -13,6 +13,7 @@
 #   Pretty lame and quick implementation, not a fun thing to do
 #   Contribution is welcome to make it the right way
 #
+from __future__ import absolute_import
 
 from datetime import datetime
 from struct import pack, unpack, calcsize
@@ -20,9 +21,9 @@ from struct import pack, unpack, calcsize
 from pyasn1.codec.der import decoder, encoder
 from binascii import hexlify
 
-from impacket.structure import Structure
-from impacket.krb5 import crypto, constants, types
-from impacket.krb5.asn1 import AS_REP, seq_set, TGS_REP, EncTGSRepPart, EncASRepPart, Ticket
+from .structure import Structure
+from . import crypto, constants, types
+from .asn1 import AS_REP, seq_set, TGS_REP, EncTGSRepPart, EncASRepPart, Ticket
 
 DELTA_TIME = 1
 

@@ -8,11 +8,12 @@
 #
 # Description:
 #   Constants for krb5.asn1 package. I took them out from the RFC plus
-#   some data from [MS-KILE] as well. 
+#   some data from [MS-KILE] as well.
 #
 #
+from __future__ import absolute_import
 
-from impacket.dcerpc.v5.enum import Enum
+from .dcerpc.v5.enum import Enum
 
 def encodeFlags(flags):
     finalFlags = list()

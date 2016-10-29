@@ -2,6 +2,7 @@ from krb5.asn1 import AP_REQ, Authenticator, TGS_REP, seq_set
 from krb5.kerberosv5 import getKerberosTGT, getKerberosTGS
 from krb5 import constants
 from krb5.types import Principal, KerberosTime, Ticket
+from krb5 import crypto
 from pyasn1.codec.der import decoder, encoder
 import datetime
 import os
@@ -18,5 +19,5 @@ def test_getKerberosTGT():
     domain = 'FILEX.COM'
     userName = Principal(user, type=constants.PrincipalNameType.NT_PRINCIPAL.value)
     tgt, cipher, oldSessionKey, sessionKey = getKerberosTGT(userName, password, domain, lmhash, nthash, aesKey, kdcHost)
-    print(tgt)
-
+    assert len(tgt) == 1728
+    assert cipher == crypto._AES256CTS

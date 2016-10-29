@@ -17,8 +17,8 @@ import struct
 from Crypto.Hash import HMAC, MD5
 from Crypto.Cipher import ARC4
 
-from impacket.structure import Structure
-from impacket.krb5 import constants, crypto
+from .structure import Structure
+from . import constants, crypto
 
 
 # Constants
