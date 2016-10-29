@@ -244,8 +244,6 @@ class _SimplifiedEnctype(_EnctypeProfile):
 
     @classmethod
     def decrypt(cls, key, keyusage, ciphertext):
-        if strinstance(ciphertext):
-            ciphertext = bytify(ciphertext)
         print('key {}'.format(repr(key)))
         print('keyusage {}'.format(repr(keyusage)))
         ki = cls.derive(key, pack('>IB', keyusage, 0x55))

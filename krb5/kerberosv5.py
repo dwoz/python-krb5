@@ -194,10 +194,13 @@ def getKerberosTGT(clientName, password, domain, lmhash, nthash, aesKey='', kdcH
 
     # Pass the hash/aes key :P
     if nthash != '':
+        print('here1')
         key = Key(cipher.enctype, nthash)
     elif aesKey != '':
+        print('here2')
         key = Key(cipher.enctype, unhexlify(aesKey))
     else:
+        print('here3')
         key = cipher.string_to_key(password, encryptionTypesData[enctype], None)
     encodedTimeStamp = encoder.encode(timeStamp)
 
@@ -266,14 +269,16 @@ def getKerberosTGT(clientName, password, domain, lmhash, nthash, aesKey='', kdcH
     # AS-REP encrypted part (includes TGS session key or
     # application session key), encrypted with the client key
     # (Section 5.4.2)
-    plainText = cipher.decrypt(key, 3, str(cipherText))
+    from .crypto import bytify
+    print('cypherText: {}'.format(repr(str(cipherText))))
+    plainText = cipher.decrypt(key, 3, bytes(cipherText))
     encASRepPart = decoder.decode(plainText, asn1Spec = EncASRepPart())[0]
 
     # Get the session key and the ticket
     # We're assuming the cipher for this session key is the same
     # as the one we used before.
     # ToDo: change this
-    sessionKey = Key(cipher.enctype,str(encASRepPart['key']['keyvalue']))
+    sessionKey = Key(cipher.enctype,bytes(encASRepPart['key']['keyvalue']))
 
     # ToDo: Check Nonces!
 
