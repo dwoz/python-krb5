@@ -81,7 +81,7 @@ def asn1decode(data = ''):
         return ans, len(ans)+pad+1
 
 class GSSAPI:
-# Generic GSSAPI Header Format 
+# Generic GSSAPI Header Format
     def __init__(self, data = None):
         self.fields = {}
         self['UUID'] = GSS_API_SPNEGO_UUID
@@ -116,19 +116,19 @@ class GSSAPI:
         if next_byte != ASN1_AID:
             raise Exception('Unknown AID=%x' % next_byte)
         data = data[1:]
-        decode_data, total_bytes = asn1decode(data) 
+        decode_data, total_bytes = asn1decode(data)
         # Now we should have a OID tag
        	next_byte = unpack('B',decode_data[:1])[0]
         if next_byte !=  ASN1_OID:
             raise Exception('OID tag not found %x' % next_byte)
         decode_data = decode_data[1:]
         # Now the OID contents, should be SPNEGO UUID
-        uuid, total_bytes = asn1decode(decode_data)                
+        uuid, total_bytes = asn1decode(decode_data)
         self['OID'] = uuid
         # the rest should be the data
         self['Payload'] = decode_data[total_bytes:]
         #pass
-        
+
     def dump(self):
         for i in self.fields.keys():
             print("%s: {%r}" % (i,self[i]))
@@ -136,7 +136,7 @@ class GSSAPI:
     def getData(self):
         ans = pack('B',ASN1_AID)
         ans += asn1encode(
-               pack('B',ASN1_OID) + 
+               pack('B',ASN1_OID) +
                asn1encode(self['UUID']) +
                self['Payload'] )
         return ans
@@ -247,7 +247,7 @@ class SPNEGO_NegTokenResp:
     def dump(self):
         for i in self.fields.keys():
             print("%s: {%r}" % (i,self[i]))
-        
+
     def getData(self):
         ans = pack('B',SPNEGO_NegTokenResp.SPNEGO_NEG_TOKEN_RESP)
         if self.fields.has_key('NegResult') and self.fields.has_key('SupportedMech'):
@@ -257,10 +257,10 @@ class SPNEGO_NegTokenResp:
                asn1encode(
                pack('B',SPNEGO_NegTokenResp.SPNEGO_NEG_TOKEN_TARG) +
                asn1encode(
-               pack('B',ASN1_ENUMERATED) + 
+               pack('B',ASN1_ENUMERATED) +
                asn1encode( self['NegResult'] )) +
                pack('B',ASN1_SUPPORTED_MECH) +
-               asn1encode( 
+               asn1encode(
                pack('B',ASN1_OID) +
                asn1encode(self['SupportedMech'])) +
                pack('B',ASN1_RESPONSE_TOKEN ) +
@@ -269,7 +269,7 @@ class SPNEGO_NegTokenResp:
         elif self.fields.has_key('NegResult'):
             # Server resp
             ans += asn1encode(
-               pack('B', ASN1_SEQUENCE) + 
+               pack('B', ASN1_SEQUENCE) +
                asn1encode(
                pack('B', SPNEGO_NegTokenResp.SPNEGO_NEG_TOKEN_TARG) +
                asn1encode(
@@ -286,18 +286,18 @@ class SPNEGO_NegTokenResp:
         return ans
 
 class SPNEGO_NegTokenInit(GSSAPI):
-    # http://tools.ietf.org/html/rfc4178#page-8 
+    # http://tools.ietf.org/html/rfc4178#page-8
     # NegTokeInit :: = SEQUENCE {
     #   mechTypes	[0] MechTypeList,
     #   reqFlags        [1] ContextFlags OPTIONAL,
-    #   mechToken       [2] OCTET STRING OPTIONAL,	
+    #   mechToken       [2] OCTET STRING OPTIONAL,
     #   mechListMIC     [3] OCTET STRING OPTIONAL,
     # }
     SPNEGO_NEG_TOKEN_INIT = 0xa0
     def fromString(self, data = 0):
         GSSAPI.fromString(self, data)
         payload = self['Payload']
-        next_byte = unpack('B', payload[:1])[0] 
+        next_byte = unpack('B', payload[:1])[0]
         if next_byte != SPNEGO_NegTokenInit.SPNEGO_NEG_TOKEN_INIT:
             raise Exception('NegTokenInit not found %x' % next_byte)
         payload = payload[1:]
@@ -323,7 +323,7 @@ class SPNEGO_NegTokenInit(GSSAPI):
         self['MechTypes'] = []
         while decode_data:
            next_byte = unpack('B', decode_data[:1])[0]
-           if next_byte != ASN1_OID:    
+           if next_byte != ASN1_OID:
              # Not a valid OID, there must be something else we won't unpack
              break
            decode_data = decode_data[1:]
@@ -364,10 +364,10 @@ class SPNEGO_NegTokenInit(GSSAPI):
                asn1encode(
                pack('B', ASN1_MECH_TYPE) +
                asn1encode(
-               pack('B', ASN1_SEQUENCE) + 
+               pack('B', ASN1_SEQUENCE) +
                asn1encode(mechTypes)) + mechToken ))
 
 
         self['Payload'] = ans
         return GSSAPI.getData(self)
-     
+
