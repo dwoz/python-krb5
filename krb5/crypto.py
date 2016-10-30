@@ -114,8 +114,6 @@ def bytify(x):
     return b''.join(pack('B', ordif(i)) for i in x)
 
 def _mac_equal(mac1, mac2):
-    print(repr(mac1))
-    print(repr(mac2))
     # Constant-time comparison function.  (We can't use HMAC.verify
     # since we use truncated macs.)
     assert len(mac1) == len(mac2)
@@ -244,8 +242,6 @@ class _SimplifiedEnctype(_EnctypeProfile):
 
     @classmethod
     def decrypt(cls, key, keyusage, ciphertext):
-        print('key {}'.format(repr(key)))
-        print('keyusage {}'.format(repr(keyusage)))
         ki = cls.derive(key, pack('>IB', keyusage, 0x55))
         ke = cls.derive(key, pack('>IB', keyusage, 0xAA))
         if len(ciphertext) < cls.blocksize + cls.macsize:
@@ -253,14 +249,9 @@ class _SimplifiedEnctype(_EnctypeProfile):
         basic_ctext, mac = ciphertext[:-cls.macsize], ciphertext[-cls.macsize:]
         if len(basic_ctext) % cls.padsize != 0:
             raise ValueError('ciphertext does not meet padding requirement')
-        print('ky {}'.format(repr(ke)))
-        print('basic_ctext {}'.format(repr(basic_ctext)))
         basic_plaintext = cls.basic_decrypt(ke, basic_ctext)
         hmac = HMAC.new(ki.contents, basic_plaintext, cls.hashmod).digest()
         expmac = hmac[:cls.macsize]
-        print('mac {}'.format(repr(mac)))
-        print('mac {}'.format(repr(mac)))
-        print('expmac {}'.format(repr(expmac)))
         if not _mac_equal(mac, expmac):
             raise InvalidChecksum('ciphertext integrity failure')
         # Discard the confounder.
@@ -303,7 +294,7 @@ class _DES3CBC(_SimplifiedEnctype):
             if _is_weak_des_key(keybytes):
                 keybytes[7] = pack('B',ordif(keybytes[7]) ^ 0xF0)
             return keybytes
-        
+
         if len(seed) != 21:
             raise ValueError('Wrong seed length')
         k1, k2, k3 = expand(seed[:7]), expand(seed[7:14]), expand(seed[14:])
@@ -421,6 +412,8 @@ class _RC4(_EnctypeProfile):
     def encrypt(cls, key, keyusage, plaintext, confounder):
         if confounder is None:
             confounder = get_random_bytes(8)
+        if strinstance(confounder):
+            confounder = bytify(confounder) #.encode()
         ki = HMAC.new(key.contents, cls.usage_str(keyusage), MD5).digest()
         cksum = HMAC.new(ki, confounder + plaintext, MD5).digest()
         ke = HMAC.new(ki, cksum, MD5).digest()
