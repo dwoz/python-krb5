@@ -103,7 +103,7 @@ class Structure:
         if format is None:
             format = self.formatForField(fieldName)
 
-        if self.fields.has_key(fieldName):
+        if fieldName in self.fields:
             ans = self.pack(format, self.fields[fieldName], field = fieldName)
         else:
             ans = self.pack(format, None, field = fieldName)
@@ -121,7 +121,7 @@ class Structure:
             try:
                 data += self.packField(field[0], field[1])
             except Exception as e:
-                if self.fields.has_key(field[0]):
+                if field[0] in self.fields:
                     e.args += ("When packing field '%s | %s | %r' in %s" % (field[0], field[1], self[field[0]], self.__class__),)
                 else:
                     e.args += ("When packing field '%s | %s' in %s" % (field[0], field[1], self.__class__),)
