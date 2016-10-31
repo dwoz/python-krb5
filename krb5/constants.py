@@ -45,12 +45,12 @@ class ApplicationTagNumbers(Enum):
     EncASRepPart   = 25
     EncTGSRepPart  = 26
     EncApRepPart   = 27
-    EncKrbPrivPart = 28 
+    EncKrbPrivPart = 28
     EncKrbCredPart = 29
     KRB_ERROR      = 30
 
 class PrincipalNameType(Enum):
-    NT_UNKNOWN        = 0 
+    NT_UNKNOWN        = 0
     NT_PRINCIPAL      = 1
     NT_SRV_INST       = 2
     NT_SRV_HST        = 3
